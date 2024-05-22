@@ -17,17 +17,17 @@ func init() {
 	streamMap = &sync.Map{}
 }
 
-type ConnProcessor struct {
+type RTMPProcessor struct {
 	conn *conn.RTMPConn
 }
 
-func New(conn *conn.RTMPConn) *ConnProcessor {
-	return &ConnProcessor{
+func New(conn *conn.RTMPConn) *RTMPProcessor {
+	return &RTMPProcessor{
 		conn: conn,
 	}
 }
 
-func (p *ConnProcessor) HandleConn() error {
+func (p *RTMPProcessor) HandleConn() error {
 	if err := p.handshake(); err != nil {
 		return err
 	}
@@ -42,7 +42,7 @@ func (p *ConnProcessor) HandleConn() error {
 	return nil
 }
 
-func (p *ConnProcessor) processStream() error {
+func (p *RTMPProcessor) processStream() error {
 	app := p.conn.ConnInfo.App
 	if p.conn.ConnType == conn.ConnectionTypePublish {
 		log.Debugf("processStream.start publish,app:%s", app)
@@ -62,7 +62,7 @@ func (p *ConnProcessor) processStream() error {
 	return nil
 }
 
-func (p *ConnProcessor) getStream(app string, mustExist bool) (*stream.AppStream, error) {
+func (p *RTMPProcessor) getStream(app string, mustExist bool) (*stream.AppStream, error) {
 	if tmp, ok := streamMap.Load(app); ok {
 		return tmp.(*stream.AppStream), nil
 	}
@@ -74,7 +74,7 @@ func (p *ConnProcessor) getStream(app string, mustExist bool) (*stream.AppStream
 	return newApp, nil
 }
 
-func (p *ConnProcessor) handshake() error {
+func (p *RTMPProcessor) handshake() error {
 	// handshake
 	if err := p.conn.HandshakeServer(); err != nil {
 		p.conn.NetConn.Close()
@@ -85,7 +85,7 @@ func (p *ConnProcessor) handshake() error {
 	return nil
 }
 
-func (p *ConnProcessor) handleConnect() error {
+func (p *RTMPProcessor) handleConnect() error {
 	// 连接
 	for {
 		cs := stream.GetChunk(p.conn)
