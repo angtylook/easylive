@@ -1,13 +1,14 @@
 package stream
 
 import (
+	"time"
+
 	"github.com/haroldleong/easylive/cache"
 	"github.com/haroldleong/easylive/conn"
 	"github.com/haroldleong/easylive/container"
 	"github.com/haroldleong/easylive/util"
-	"github.com/orcaman/concurrent-map"
+	cmap "github.com/orcaman/concurrent-map"
 	log "github.com/sirupsen/logrus"
-	"time"
 )
 
 type AppStream struct {
@@ -23,7 +24,7 @@ func NewAppStream() *AppStream {
 	}
 }
 
-func (as *AppStream) ReadingData(conn *conn.Conn) {
+func (as *AppStream) ReadingData(conn *conn.RTMPConn) {
 	startTime := time.Now()
 	defer func() {
 		log.Infof("ReadingData.stream end,take %d m", time.Since(startTime).Minutes())
@@ -53,7 +54,7 @@ func (as *AppStream) ReadingData(conn *conn.Conn) {
 	}
 }
 
-func (as *AppStream) AddAudienceWriteEvent(conn *conn.Conn) error {
+func (as *AppStream) AddAudienceWriteEvent(conn *conn.RTMPConn) error {
 	stream := New(conn, false)
 	as.audienceStreams.Set(stream.id, stream)
 	go as.CheckPull(stream)

@@ -1,11 +1,12 @@
 package conn
 
 import (
-	"github.com/Monibuca/engine/v2/util/bits/pio"
 	"io"
+
+	"github.com/Monibuca/engine/v2/util/bits/pio"
 )
 
-func (c *Conn) getRealCSID(csid uint32) (uint32, error) {
+func (c *RTMPConn) getRealCSID(csid uint32) (uint32, error) {
 	var data []byte
 	switch csid {
 	default: // Chunk basic header 1
@@ -23,7 +24,7 @@ func (c *Conn) getRealCSID(csid uint32) (uint32, error) {
 	return csid, nil
 }
 
-func (c *Conn) WriteUintBE(v uint32, n int) error {
+func (c *RTMPConn) WriteUintBE(v uint32, n int) error {
 	for i := 0; i < n; i++ {
 		b := byte(v>>uint32((n-i-1)<<3)) & 0xff
 		if err := c.bufWriter.WriteByte(b); err != nil {
@@ -33,7 +34,7 @@ func (c *Conn) WriteUintBE(v uint32, n int) error {
 	return nil
 }
 
-func (c *Conn) WriteUintLE(v uint32, n int) error {
+func (c *RTMPConn) WriteUintLE(v uint32, n int) error {
 	for i := 0; i < n; i++ {
 		b := byte(v) & 0xff
 		if err := c.bufWriter.WriteByte(b); err != nil {

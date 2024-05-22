@@ -30,7 +30,7 @@ type ConnectInfo struct {
 	ObjectEncoding int    `amf:"objectEncoding" json:"objectEncoding"`
 }
 
-func (c *Conn) HandleChunk(cs *ChunkStream) (err error) {
+func (c *RTMPConn) HandleChunk(cs *ChunkStream) (err error) {
 	var cmd *Command
 	switch cs.TypeID {
 	case consts.MsgTypeIDSetChunkSize:
@@ -70,7 +70,7 @@ func (c *Conn) HandleChunk(cs *ChunkStream) (err error) {
 	return c.processCMD(cs, cmd)
 }
 
-func (c *Conn) processCMD(cs *ChunkStream, cmd *Command) error {
+func (c *RTMPConn) processCMD(cs *ChunkStream, cmd *Command) error {
 	switch cmd.CommandName {
 	case consts.CmdConnect:
 		if err := c.connect(cmd); err != nil {
@@ -133,7 +133,7 @@ func (c *Conn) processCMD(cs *ChunkStream, cmd *Command) error {
 	return nil
 }
 
-func (c *Conn) connect(cmd *Command) error {
+func (c *RTMPConn) connect(cmd *Command) error {
 	if app, ok := cmd.CommandObj["app"]; ok {
 		c.ConnInfo.App = app.(string)
 	}
@@ -149,7 +149,7 @@ func (c *Conn) connect(cmd *Command) error {
 	return nil
 }
 
-func (c *Conn) connectResp(cur *ChunkStream, cmd *Command) error {
+func (c *RTMPConn) connectResp(cur *ChunkStream, cmd *Command) error {
 	cs := c.NewWindowAckSize(2500000)
 	c.Write(&cs)
 	cs = c.NewSetPeerBandwidth(2500000)
@@ -169,7 +169,7 @@ func (c *Conn) connectResp(cur *ChunkStream, cmd *Command) error {
 	return c.writeCommandMsg(cur.CSID, cur.StreamID, "_result", cmd.CommandTransId, resp, event)
 }
 
-func (c *Conn) publishResp(cs *ChunkStream) error {
+func (c *RTMPConn) publishResp(cs *ChunkStream) error {
 	event := make(newamf.Object)
 	event["level"] = "status"
 	event["code"] = "NetStream.Publish.Start"
@@ -177,7 +177,7 @@ func (c *Conn) publishResp(cs *ChunkStream) error {
 	return c.writeCommandMsg(cs.CSID, cs.StreamID, "onStatus", 0, nil, event)
 }
 
-func (c *Conn) markStreamBegin() error {
+func (c *RTMPConn) markStreamBegin() error {
 	ret := c.userControlMsg(uint32(consts.UserControlStreamIsRecorded), 4)
 	for i := 0; i < 4; i++ {
 		ret.Data[2+i] = byte(1 >> uint32((3-i)*8) & 0xff)
@@ -191,7 +191,7 @@ func (c *Conn) markStreamBegin() error {
 	return c.Write(&ret)
 }
 
-func (c *Conn) playResp(cs *ChunkStream) error {
+func (c *RTMPConn) playResp(cs *ChunkStream) error {
 	if err := c.markStreamBegin(); err != nil {
 		return err
 	}
@@ -214,6 +214,6 @@ func (c *Conn) playResp(cs *ChunkStream) error {
 	return nil
 }
 
-func (c *Conn) createStreamResp(cs *ChunkStream, cmd *Command) error {
+func (c *RTMPConn) createStreamResp(cs *ChunkStream, cmd *Command) error {
 	return c.writeCommandMsg(cs.CSID, cs.StreamID, "_result", cmd.CommandTransId, nil, 1)
 }

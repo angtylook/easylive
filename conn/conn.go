@@ -3,9 +3,10 @@ package conn
 import (
 	"bufio"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"net"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/Monibuca/engine/v2/util/bits/pio"
 )
@@ -14,14 +15,16 @@ const (
 	remoteWindowAckSize = 5000000 // 客户端可接受的最大数据包的值
 )
 
+// 连接类型，推流或者拉流
 type ConnectionType int32
 
 const (
-	ConnectionTypePublish ConnectionType = iota
-	ConnectionTypePull
+	ConnectionTypePublish ConnectionType = iota // 推流
+	ConnectionTypePull                          // 拉流
 )
 
-type Conn struct {
+// RTMPConn rtmp连接，处理chunk
+type RTMPConn struct {
 	NetConn   net.Conn
 	bufReader *bufio.Reader // 读数据io
 	bufWriter *bufio.Writer // 写数据io
@@ -44,12 +47,12 @@ type Conn struct {
 	ConnType ConnectionType // 是否是推流or拉流
 }
 
-func (c *Conn) MessageDone() bool {
+func (c *RTMPConn) MessageDone() bool {
 	return c.messageDone
 }
 
-func NewConn(netConn net.Conn) *Conn {
-	conn := &Conn{
+func NewRTMPConn(netConn net.Conn) *RTMPConn {
+	conn := &RTMPConn{
 		writeMaxChunkSize: 128,
 		readMaxChunkSize:  128,
 	}
@@ -66,7 +69,7 @@ func NewConn(netConn net.Conn) *Conn {
 	return conn
 }
 
-func (c *Conn) HandshakeServer() error {
+func (c *RTMPConn) HandshakeServer() error {
 	var random [(1 + 1536*2) * 2]byte
 
 	C0C1C2 := random[:1536*2+1]
@@ -135,7 +138,7 @@ func (c *Conn) HandshakeServer() error {
 	return nil
 }
 
-func (c *Conn) ReadChunk() (*ChunkStream, error) {
+func (c *RTMPConn) ReadChunk() (*ChunkStream, error) {
 	// 读取basic header
 	var (
 		data []byte
@@ -268,7 +271,7 @@ func (c *Conn) ReadChunk() (*ChunkStream, error) {
 	return cs, nil
 }
 
-func (c *Conn) Ack(cs *ChunkStream) {
+func (c *RTMPConn) Ack(cs *ChunkStream) {
 	c.received += cs.Length
 	c.ackReceived += cs.Length
 	// 处理溢出，acknowledge如果累积超过0xf0000000，就置零

@@ -1,10 +1,11 @@
 package server
 
 import (
+	"net"
+
 	"github.com/haroldleong/easylive/conn"
 	"github.com/haroldleong/easylive/processor"
 	log "github.com/sirupsen/logrus"
-	"net"
 )
 
 type RtmpServer struct {
@@ -27,7 +28,7 @@ func (rs *RtmpServer) StartServe() (err error) {
 			return err
 		}
 		go func(netConn net.Conn) {
-			pc := processor.New(conn.NewConn(netConn))
+			pc := processor.New(conn.NewRTMPConn(netConn))
 			if err := pc.HandleConn(); err != nil {
 				log.Errorf("StartServe fail.err:%s", err)
 				netConn.Close()

@@ -2,11 +2,12 @@ package processor
 
 import (
 	"fmt"
+	"sync"
+
 	"github.com/haroldleong/easylive/conn"
 	"github.com/haroldleong/easylive/stream"
 	"github.com/haroldleong/easylive/util"
 	log "github.com/sirupsen/logrus"
-	"sync"
 )
 
 // 存储各直播流的读写流，转发
@@ -17,10 +18,10 @@ func init() {
 }
 
 type ConnProcessor struct {
-	conn *conn.Conn
+	conn *conn.RTMPConn
 }
 
-func New(conn *conn.Conn) *ConnProcessor {
+func New(conn *conn.RTMPConn) *ConnProcessor {
 	return &ConnProcessor{
 		conn: conn,
 	}

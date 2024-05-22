@@ -1,13 +1,14 @@
 package stream
 
 import (
+	"io"
+
 	uuid "github.com/google/uuid"
 	"github.com/haroldleong/easylive/conn"
 	"github.com/haroldleong/easylive/consts"
 	"github.com/haroldleong/easylive/container"
 	"github.com/haroldleong/easylive/util"
 	log "github.com/sirupsen/logrus"
-	"io"
 )
 
 type streamType int32
@@ -19,13 +20,13 @@ const (
 
 type Stream struct {
 	id          string                 // 唯一标识
-	conn        *conn.Conn             //连接
+	conn        *conn.RTMPConn         //连接
 	packetQueue chan *container.Packet // 流chan，用于拉流端
 	init        bool                   // 是否初始化
 	streamType  streamType
 }
 
-func New(connection *conn.Conn, anchor bool) *Stream {
+func New(connection *conn.RTMPConn, anchor bool) *Stream {
 	s := &Stream{
 		id:   uuid.New().String(),
 		conn: connection,
@@ -85,7 +86,7 @@ func (s *Stream) sendStreamChunk(cs *conn.ChunkStream) error {
 	return s.conn.WriteChunk(cs)
 }
 
-func GetChunk(newConn *conn.Conn) *conn.ChunkStream {
+func GetChunk(newConn *conn.RTMPConn) *conn.ChunkStream {
 	// read chunk
 	var chunk *conn.ChunkStream
 	for {

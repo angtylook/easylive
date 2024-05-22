@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"io"
+
 	newamf "github.com/gwuhaolin/livego/protocol/amf"
 	"github.com/haroldleong/easylive/consts"
-	"io"
 )
 
-func (c *Conn) readData(n int32) ([]byte, error) {
+func (c *RTMPConn) readData(n int32) ([]byte, error) {
 	mh := c.tmpReadData[:n]
 	if _, err := io.ReadFull(c.bufReader, mh); err != nil {
 		return nil, err
@@ -17,7 +18,7 @@ func (c *Conn) readData(n int32) ([]byte, error) {
 	return mh, nil
 }
 
-func (c *Conn) WriteChunk(cs *ChunkStream) error {
+func (c *RTMPConn) WriteChunk(cs *ChunkStream) error {
 	if cs.TypeID == consts.MsgTypeIDDataMsgAMF0 ||
 		cs.TypeID == consts.MsgTypeIDDataMsgAMF3 {
 		var err error
@@ -32,14 +33,14 @@ func (c *Conn) WriteChunk(cs *ChunkStream) error {
 	return c.bufWriter.Flush()
 }
 
-func (c *Conn) Write(cs *ChunkStream) error {
+func (c *RTMPConn) Write(cs *ChunkStream) error {
 	if cs.TypeID == consts.MsgTypeIDSetChunkSize {
 		c.writeMaxChunkSize = int(binary.BigEndian.Uint32(cs.Data))
 	}
 	return c.writeChunk(cs, c.writeMaxChunkSize)
 }
 
-func (c *Conn) writeChunk(cs *ChunkStream, chunkSize int) error {
+func (c *RTMPConn) writeChunk(cs *ChunkStream, chunkSize int) error {
 	if cs.TypeID == consts.MsgTypeIDAudioMsg {
 		cs.CSID = 4
 	} else if cs.TypeID == consts.MsgTypeIDVideoMsg ||
@@ -78,7 +79,7 @@ func (c *Conn) writeChunk(cs *ChunkStream, chunkSize int) error {
 	return nil
 }
 
-func (c *Conn) writeHeader(cs *ChunkStream) error {
+func (c *RTMPConn) writeHeader(cs *ChunkStream) error {
 	//Chunk Basic Header
 	h := cs.Format << 6
 	switch {
@@ -123,11 +124,11 @@ END:
 	return nil
 }
 
-func (c *Conn) writeCommandMsg(csid, msgsid uint32, args ...interface{}) (err error) {
+func (c *RTMPConn) writeCommandMsg(csid, msgsid uint32, args ...interface{}) (err error) {
 	return c.writeAMF0Msg(consts.MsgTypeIDCommandMsgAMF0, csid, msgsid, args...)
 }
 
-func (c *Conn) writeAMF0Msg(typeID uint32, csid, streamID uint32, args ...interface{}) error {
+func (c *RTMPConn) writeAMF0Msg(typeID uint32, csid, streamID uint32, args ...interface{}) error {
 	encoder := &newamf.Encoder{}
 	byteWriter := bytes.NewBuffer(nil)
 	for _, v := range args {
@@ -150,7 +151,7 @@ func (c *Conn) writeAMF0Msg(typeID uint32, csid, streamID uint32, args ...interf
 	return c.bufWriter.Flush()
 }
 
-func (c *Conn) userControlMsg(eventType, buflen uint32) ChunkStream {
+func (c *RTMPConn) userControlMsg(eventType, buflen uint32) ChunkStream {
 	var ret ChunkStream
 	buflen += 2
 	ret = ChunkStream{
@@ -166,7 +167,7 @@ func (c *Conn) userControlMsg(eventType, buflen uint32) ChunkStream {
 	return ret
 }
 
-func (c *Conn) handleCommandMsgAMF0(b []byte) (cmd *Command, err error) {
+func (c *RTMPConn) handleCommandMsgAMF0(b []byte) (cmd *Command, err error) {
 	// 命令解析详见https://www.jianshu.com/p/7dd3b5b4e092
 	/*	{
 		"CommandName": "connect",

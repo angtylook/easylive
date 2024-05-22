@@ -6,19 +6,19 @@ import (
 	"github.com/haroldleong/easylive/consts"
 )
 
-func (c *Conn) NewAck(size uint32) ChunkStream {
+func (c *RTMPConn) NewAck(size uint32) ChunkStream {
 	return initControlMsg(consts.MsgTypeIDAck, 4, size)
 }
 
-func (c *Conn) NewSetChunkSize(size uint32) ChunkStream {
+func (c *RTMPConn) NewSetChunkSize(size uint32) ChunkStream {
 	return initControlMsg(consts.MsgTypeIDSetChunkSize, 4, size)
 }
 
-func (c *Conn) NewWindowAckSize(size uint32) ChunkStream {
+func (c *RTMPConn) NewWindowAckSize(size uint32) ChunkStream {
 	return initControlMsg(consts.MsgTypeIDWindowAckSize, 4, size)
 }
 
-func (c *Conn) NewSetPeerBandwidth(size uint32) ChunkStream {
+func (c *RTMPConn) NewSetPeerBandwidth(size uint32) ChunkStream {
 	ret := initControlMsg(consts.MsgTypeIDSetPeerBandwidth, 5, size)
 	ret.Data[4] = 2
 	return ret
