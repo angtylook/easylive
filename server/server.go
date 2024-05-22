@@ -29,10 +29,9 @@ func (rs *RtmpServer) StartServe() (err error) {
 		}
 		go func(netConn net.Conn) {
 			rtmpConn := conn.NewRTMPConn(netConn)
-			rtmpProcessor := processor.New(rtmpConn)
-			if err := rtmpProcessor.HandleConn(); err != nil {
+			rtmpProcessor := processor.NewRTMPProcessor(rtmpConn)
+			if err := rtmpProcessor.Start(); err != nil {
 				log.Errorf("StartServe fail.err:%s", err)
-				netConn.Close()
 			}
 		}(netConn)
 	}

@@ -21,13 +21,15 @@ type RTMPProcessor struct {
 	conn *conn.RTMPConn
 }
 
-func New(conn *conn.RTMPConn) *RTMPProcessor {
+func NewRTMPProcessor(conn *conn.RTMPConn) *RTMPProcessor {
 	return &RTMPProcessor{
 		conn: conn,
 	}
 }
 
-func (p *RTMPProcessor) HandleConn() error {
+func (p *RTMPProcessor) Start() error {
+	defer p.conn.NetConn.Close()
+
 	if err := p.handshake(); err != nil {
 		return err
 	}
